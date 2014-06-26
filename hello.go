@@ -3,11 +3,14 @@ package hello
 import "fmt"
 import "net/http"
 import "html/template"
+import "appengine"
+import "appengine/urlfetch"
 
 
 func init() {
     http.HandleFunc("/", root)
     http.HandleFunc("/sign", sign)
+    http.HandleFunc("/requests", requests)
 }
 
 func root(w http.ResponseWriter, r *http.Request) {
@@ -42,3 +45,14 @@ const signTemplateHTML = `
   </body>
 </html>
 `
+
+func requests(w http.ResponseWriter, r *http.Request) {
+    c := appengine.NewContext(r)
+    client := urlfetch.Client(c)
+    resp, err := client.Get("http://www.google.com/")
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    fmt.Fprintf(w, "HTTP GET returned status %v", resp.Status)
+}
